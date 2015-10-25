@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>US State Energy Consumption</title>
+  <meta charset="utf-8">
+  <meta name="description" content="US State Energy Consumption">
+  <meta name="author" content="Tim Healy">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/js/slides" 
+    src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>US State Energy Consumption</h1>
+    <h2></h2>
+    <p>Tim Healy<br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>Table of Contents</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>About</li>
+<li>Data Source</li>
+<li>Methodology</li>
+<li>Application</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>About</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>This application visualizes state energy consumption from 1998 - 2013. Using data from the Energy Information Administration (EIA), it plots a choropleth map to show relative consumption from renewable and fossil-fuel based sources.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Data Source</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">setwd( # set working directory to store data )
+Key &lt;- # You will need your own API key to reproduce
+State &lt;- state.abb
+library(jsonlite)
+library(curl)
+library(plyr)
+</code></pre>
+
+<ul>
+<li>Set a working directory to store data pulled from the EIA API. </li>
+<li>Users can register to access the API at the following address: <a href="http://www.eia.gov/beta/api/register.cfm">EIA API</a>.</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Data Source</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">PullEIA &lt;- function(id) {
+
+    dat = data.frame()
+    for( i in State) {
+        ID = paste(&quot;SEDS&quot;, id, i, &quot;A&quot;, sep = &quot;.&quot;)
+        url = paste(&quot;http://api.eia.gov/series/?api_key=&quot;, Key, &quot;&amp;series_id=&quot;, ID,  
+                    sep = &quot;&quot;)
+        text = readLines(curl(url))
+        dat_raw = fromJSON(text)
+        dat_iter = dat_raw$series$data [[1]]
+        btus = as.numeric(dat_iter[, 2])
+        dat = rbind(dat, btus)
+    }
+
+    rownames(dat) = State
+    colnames(dat) = dat_iter[,1]
+    write.csv(dat, paste(id, &quot;.csv&quot;, sep = &quot;&quot;))
+}
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:;">
+  <hgroup>
+    <h2>Data Source</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Energy source ID is inputted into the above function to pull data. </li>
+<li>Function downloads time series of energy consumption in Btus for each state and binds together state time series into a summary dataframe. </li>
+<li>Summary dataframe is saved into user&#39;s working directory.</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-6" style="background:;">
+  <hgroup>
+    <h2>Data Source</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Here are the function calls for each of the energy sources used in this analysis. </p>
+
+<pre><code class="r">PullEIA(&quot;SOTCB&quot;) # Solar
+PullEIA(&quot;WYTCB&quot;) # Wind
+PullEIA(&quot;BMTCB&quot;) # Biomass
+PullEIA(&quot;GETCB&quot;) # Geothermal
+PullEIA(&quot;HYTCB&quot;) # Hydro
+PullEIA(&quot;RETCB&quot;) # Renewables
+PullEIA(&quot;CLTCB&quot;) # Coal
+PullEIA(&quot;PATCB&quot;) # Petroleum
+PullEIA(&quot;DFTCB&quot;) # Fuel Oil
+PullEIA(&quot;NGTCB&quot;) # Natural Gas
+PullEIA(&quot;FFTCB&quot;) # Fossil Fuels
+PullEIA(&quot;NUETB&quot;) # Nuclear
+PullEIA(&quot;GDPRX&quot;) # GDP
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-7" style="background:;">
+  <hgroup>
+    <h2>Methodology</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Example of a summary file, for solar: </p>
+
+<pre><code class="r">##        2013  2012  2011  2010  2009  2008  2007  2006  2005  2004  2003
+## 1 AL    147   129   122   104    86    83    77    74    62    61    75
+## 2 AK     10     7     5     4     4     3     0     0     0     0     0
+## 3 AZ  35310 21256 10351  5990  4426  3975  3394  3201  2975  2997  3034
+## 4 AR    145   138   123   105    82    70    67   112   104   270   406
+## 5 CA 109342 74848 60321 46654 37194 33866 28525 25406 23081 22368 21985
+## 6 CO   6757  5063  3808  2187  1230   981   463   262   220   199   204
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-8" style="background:;">
+  <hgroup>
+    <h2>Methodology</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The summary files are then bundled together into a list of dataframes:</p>
+
+<pre><code class="r"># Combine the energy source files into one list of data frames
+State = state.abb
+files = paste(&quot;./data/&quot;, list.files(&quot;./data&quot;), sep = &quot;&quot;)
+readlist = lapply(files, function(x) 
+    {read.csv(x, header = TRUE, check.names = FALSE)}
+    )
+filenames = c(&quot;Biomass&quot;, &quot;Coal&quot;, &quot;Fuel Oil&quot;, &quot;Fossil Fuels&quot;, &quot;GDP&quot;, &quot;Geothermal&quot;, &quot;Hydro&quot;, 
+              &quot;Natural Gas&quot;, &quot;Nuclear&quot;, &quot;Petroleum&quot;, &quot;Renewables&quot;, &quot;Solar&quot;, &quot;Wind&quot;)
+names(readlist) = filenames
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-9" style="background:;">
+  <hgroup>
+    <h2>Methodology</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>These summary files are then divided by each state&#39;s real Gross Domestic Product (GDP) to normalize each states energy use per dollar of real GDP. </p>
+
+<pre><code class="r"># Divide energy source files by GDP to get MM&#39;s Btu / $ GDP
+readlist2 = readlist[-5]
+readlist2 = lapply(readlist2, function(x) { x[, 1:18] } )
+GDP = readlist$GDP
+readlist2 = lapply(readlist2, function(x) { x[,2:17] / (GDP[2:17] / 1000) })
+readlist2 = lapply(readlist2, function(x) { cbind(State, x)})
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-10" style="background:;">
+  <hgroup>
+    <h2>Application</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The user inputs the energy source, and toggles the year using a slider</p>
+
+<pre><code class="r">library(rCharts)
+options(RCHART_LIB = &#39;datamaps&#39;)
+shinyUI(pageWithSidebar(
+    headerPanel(&quot;State Energy Consumption&quot;),
+
+    sidebarPanel( &quot;MMBtu / GDP (Real USD)&quot;,
+        selectInput(&quot;source&quot;, 
+                label = &quot;Energy Source:&quot;,
+                choices = c(&quot;Solar&quot;, &quot;Wind&quot;, &quot;Biomass&quot;, &quot;Geothermal&quot;, &quot;Hydro&quot;, &quot;Renewables&quot;, 
+                            &quot;Coal&quot;, &quot;Petroleum&quot;, &quot;Fuel Oil&quot;, &quot;Natural Gas&quot;, &quot;Fossil Fuels&quot;, &quot;Nuclear&quot;),
+                selected = &quot;Renewables&quot;),
+
+        sliderInput(&quot;year&quot;, 
+                label = &quot;Year:&quot;,
+                min = 1998, max = 2013, value = 1998, sep = &quot;&quot;, ticks = FALSE)
+        ),
+
+    mainPanel(showOutput(&quot;energy_map&quot;, &quot;datamaps&quot;))
+    )
+)
+</code></pre>
+
+<pre><code>## Error in eval(expr, envir, enclos): could not find function &quot;shinyUI&quot;
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-11" style="background:;">
+  <hgroup>
+    <h2>Application</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">shinyServer(function(input, output) {
+    output$energy_map &lt;- renderChart({
+        SOURCE = input$source
+        source_dat = readlist2[[SOURCE]]
+
+        YEAR = as.character(input$year)
+        source_dat = source_dat[, c(&quot;State&quot;, YEAR)]
+
+        if(SOURCE %in% c(&quot;Solar&quot;, &quot;Wind&quot;, &quot;Biomass&quot;, &quot;Geothermal&quot;, &quot;Hydro&quot;, &quot;Renewables&quot;)){
+            cols = &#39;Greens&#39;
+        } else {
+            cols = &#39;Reds&#39;
+        }
+
+        energy_map = rCharts::choropleth(
+            cut(source_dat[, YEAR], 5, labels = F) ~ State,
+            data = source_dat,
+            pal = cols
+        )
+        energy_map$addParams(dom = &quot;energy_map&quot;)
+        energy_map
+    })
+})
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Table of Contents'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='About'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Data Source'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Data Source'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Data Source'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='Data Source'>
+         6
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=7 title='Methodology'>
+         7
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=8 title='Methodology'>
+         8
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=9 title='Methodology'>
+         9
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=10 title='Application'>
+         10
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=11 title='Application'>
+         11
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
