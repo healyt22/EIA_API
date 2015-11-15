@@ -3,7 +3,7 @@ options(RCHART_LIB = 'datamaps')
 shinyUI(pageWithSidebar(
     headerPanel("State Energy Consumption"),
     
-    sidebarPanel( "MMBtu / GDP (Real USD)",
+    sidebarPanel( "MMBtu / GDP (Real USD)", width = "3",
         selectInput("source", 
                 label = "Energy Source:",
                 choices = c("Solar", "Wind", "Biomass", "Geothermal", "Hydro", "Renewables", 

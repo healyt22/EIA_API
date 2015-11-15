@@ -19,7 +19,7 @@ readlist2 = lapply(readlist2, function(x) { cbind(State, x)})
 
 require(rCharts)
 require(RColorBrewer)
-options(RCHART_WIDTH = 800)
+options(RCHART_WIDTH = 700)
 shinyServer(function(input, output) {
     output$energy_map <- renderChart({
         SOURCE = input$source
@@ -39,7 +39,7 @@ shinyServer(function(input, output) {
             data = source_dat,
             pal = cols
         )
-        energy_map$addParams(dom = "energy_map")
+        energy_map$addParams(dom = "energy_map", width="700")
         energy_map
     })
 })
